@@ -11,6 +11,9 @@
 # github.com/canhlinh/hlsdl v0.0.0-20210810121645-29f1ce6d3208
 ## explicit; go 1.13
 github.com/canhlinh/hlsdl
+# github.com/davecgh/go-spew v1.1.1
+## explicit
+github.com/davecgh/go-spew/spew
 # github.com/go-rod/rod v0.112.0
 ## explicit; go 1.16
 github.com/go-rod/rod
@@ -40,8 +43,17 @@ github.com/grafov/m3u8
 # github.com/mattn/go-runewidth v0.0.4
 ## explicit
 github.com/mattn/go-runewidth
+# github.com/pmezard/go-difflib v1.0.0
+## explicit
+github.com/pmezard/go-difflib/difflib
 # github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
 ## explicit
+# github.com/stretchr/objx v0.5.0
+## explicit; go 1.12
+# github.com/stretchr/testify v1.8.1
+## explicit; go 1.13
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
 # github.com/temoto/robotstxt v1.1.1
 ## explicit; go 1.11
 # github.com/ysmood/goob v0.4.0
@@ -69,3 +81,6 @@ golang.org/x/sys/unix
 # gopkg.in/cheggaaa/pb.v1 v1.0.28
 ## explicit
 gopkg.in/cheggaaa/pb.v1
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
+gopkg.in/yaml.v3
