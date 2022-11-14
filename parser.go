@@ -12,6 +12,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type Quality string
+
+const QualityLow Quality = "#EXT-X-STREAM-INF:BANDWIDTH=700000"
+const QualityMedium Quality = "#EXT-X-STREAM-INF:BANDWIDTH=1100000"
+const QualityHigh Quality = "#EXT-X-STREAM-INF:BANDWIDTH=1800000"
+
 type Parser interface {
 	FindDownloadLink(url string) (string, error)
 }
@@ -24,6 +30,7 @@ func NewParser(cfg ParserConfiguration) Parser {
 
 type ParserConfiguration struct {
 	DisplayBrowser bool
+	Quality        Quality
 }
 
 type parser struct {
@@ -118,7 +125,7 @@ func (p *parser) findStreamUrl(vidUrl string) (string, error) {
 		if isNextLine {
 			return line, nil
 		}
-		if line == "#EXT-X-STREAM-INF:BANDWIDTH=1800000" {
+		if line == string(p.cfg.Quality) {
 			isNextLine = true
 		}
 	}

@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/canhlinh/hlsdl v0.0.0-20210810121645-29f1ce6d3208
 	github.com/go-rod/rod v0.112.0
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
 	github.com/thatisuday/commando v1.0.4

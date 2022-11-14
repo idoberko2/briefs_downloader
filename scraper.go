@@ -15,6 +15,7 @@ func DefaultScraper() Scraper {
 	return &scraper{
 		p: NewParser(ParserConfiguration{
 			DisplayBrowser: false,
+			Quality:        QualityHigh,
 		}),
 		d: NewDownloader(),
 	}
