@@ -148,7 +148,3 @@ func main() {
 	fmt.Println("found video url: " + url)
 	download(url)
 }
-
-type taboolaReq struct {
-	Url string `json:"u"`
-}

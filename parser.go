@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -24,36 +24,18 @@ type parser struct{}
 func (p *parser) FindDownloadLink(siteUrl string) (string, error) {
 	urlObj := p.findTaboolaTraceUrl(siteUrl)
 	log.Debug("found taboola trace url", urlObj)
-	vidUrl := p.extractVideoInfoLink(urlObj)
-	httpResp, err := http.Get(vidUrl)
+
+	vidUrl, err := p.extractVideoInfoLink(urlObj)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
+	log.Debug("found video info url", vidUrl)
 
-	// body, err := ioutil.ReadAll(httpResp.Body)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println(string(body))
-
-	scanner := bufio.NewScanner(httpResp.Body)
-	nextLine := false
-	var streamUrl string
-	for scanner.Scan() {
-		line := scanner.Text()
-		fmt.Println(line)
-		if nextLine {
-			streamUrl = line
-			nextLine = false
-		}
-		if line == "#EXT-X-STREAM-INF:BANDWIDTH=1800000" {
-			nextLine = true
-		}
-
+	streamUrl, err := p.findStreamUrl(vidUrl)
+	if err != nil {
+		return "", err
 	}
-
-	fmt.Println("done")
-	// <-time.After(3 * time.Minute)
+	log.Debug("found stream url", streamUrl)
 
 	return streamUrl, nil
 }
@@ -78,16 +60,41 @@ func (p *parser) findTaboolaTraceUrl(siteUrl string) string {
 	return <-resp
 }
 
-func (p *parser) extractVideoInfoLink(urlObj string) string {
+func (p *parser) extractVideoInfoLink(urlObj string) (string, error) {
 	var taboolaUrlContainer taboolaReq
 	if err := json.Unmarshal([]byte(urlObj), &taboolaUrlContainer); err != nil {
-		panic(err)
+		return "", err
 	}
 
 	taboolaUrl, err := url.Parse(taboolaUrlContainer.Url)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return taboolaUrl.Query().Get("videoUrl")
+	return taboolaUrl.Query().Get("videoUrl"), nil
+}
+
+func (p *parser) findStreamUrl(vidUrl string) (string, error) {
+	httpResp, err := http.Get(vidUrl)
+	if err != nil {
+		return "", err
+	}
+
+	scanner := bufio.NewScanner(httpResp.Body)
+	isNextLine := false
+	for scanner.Scan() {
+		line := scanner.Text()
+		if isNextLine {
+			return line, nil
+		}
+		if line == "#EXT-X-STREAM-INF:BANDWIDTH=1800000" {
+			isNextLine = true
+		}
+	}
+
+	return "", errors.New("could not find video url")
+}
+
+type taboolaReq struct {
+	Url string `json:"u"`
 }
