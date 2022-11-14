@@ -4,18 +4,43 @@ import (
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/thatisuday/commando"
 )
 
 func main() {
-	// url := "https://sport5api.akamaized.net/Redirector/sport5/manifest/NM_VTR_TAK_RAINA_131122_2/HLS/playlist.m3u8"
-	// url := "https://rgevod.akamaized.net/vodedge/_definst_/mp4:rge/bynet/sport5/sport5/PRV5/sc0YaB81bw/App/NM_VTR_TAK_RAINA_131122_2_1800.mp4/chunklist_b1800000.m3u8"
-	// url := "https://rgevod.akamaized.net/vodedge/_definst_/mp4:rge/bynet/sport5/sport5/PRV5/sc0YaB81bw/App/NM_VTR_TAK_KASH_131122_2_1800.mp4/chunklist_b1800000.m3u8"
-	// url := findVideoUrl("https://playbyplay.sport5.co.il/?GameID=125421&FLNum=16")
 	s := DefaultScraper()
-	filePath, err := s.FindAndDownload("https://playbyplay.sport5.co.il/?GameID=125423&FLNum=16")
-	if err != nil {
-		log.WithError(err).Fatal("failed to scrape link")
-	}
 
-	fmt.Println("file is downloaded to: " + filePath)
+	commando.
+		SetExecutableName("dnldr").
+		SetVersion("v1.0.0").
+		SetDescription("This CLI tool scrapes and downloads short sports streams")
+
+	commando.
+		Register("download").
+		SetDescription("This command scrapes and downloads a stream").
+		SetShortDescription("download a stream").
+		AddArgument("url", "url of the webpage", "").
+		AddFlag("verbose", "display logs while serving the project", commando.Bool, nil).
+		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
+			verbose, err := flags["verbose"].GetBool()
+			if err != nil {
+				log.WithError(err).Fatal("error parsing flag")
+			}
+			if verbose {
+				fmt.Println("verbose")
+				log.SetLevel(log.DebugLevel)
+			}
+
+			// "https://playbyplay.sport5.co.il/?GameID=125423&FLNum=16"
+			url := args["url"].Value
+			fmt.Println(url)
+			filePath, err := s.FindAndDownload(url)
+			if err != nil {
+				log.WithError(err).Fatal("failed to scrape link")
+			}
+
+			log.Info("file is downloaded to: " + filePath)
+		})
+
+	commando.Parse(nil)
 }

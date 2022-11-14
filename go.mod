@@ -7,6 +7,7 @@ require (
 	github.com/go-rod/rod v0.112.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
+	github.com/thatisuday/commando v1.0.4
 )
 
 require (
@@ -14,6 +15,7 @@ require (
 	github.com/grafov/m3u8 v0.11.1 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/thatisuday/clapper v1.0.10 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect
 	github.com/ysmood/gson v0.7.1 // indirect
 	github.com/ysmood/leakless v0.8.0 // indirect

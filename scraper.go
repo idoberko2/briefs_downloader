@@ -13,7 +13,9 @@ func NewScraper(p Parser, d Downloader) Scraper {
 
 func DefaultScraper() Scraper {
 	return &scraper{
-		p: NewParser(),
+		p: NewParser(ParserConfiguration{
+			DisplayBrowser: false,
+		}),
 		d: NewDownloader(),
 	}
 }

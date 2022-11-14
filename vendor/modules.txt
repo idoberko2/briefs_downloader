@@ -33,6 +33,12 @@ github.com/sirupsen/logrus
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/thatisuday/clapper v1.0.10
+## explicit; go 1.13
+github.com/thatisuday/clapper
+# github.com/thatisuday/commando v1.0.4
+## explicit; go 1.13
+github.com/thatisuday/commando
 # github.com/ysmood/goob v0.4.0
 ## explicit; go 1.15
 github.com/ysmood/goob

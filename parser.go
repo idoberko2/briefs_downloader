@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -15,11 +16,19 @@ type Parser interface {
 	FindDownloadLink(url string) (string, error)
 }
 
-func NewParser() Parser {
-	return &parser{}
+func NewParser(cfg ParserConfiguration) Parser {
+	return &parser{
+		cfg: cfg,
+	}
 }
 
-type parser struct{}
+type ParserConfiguration struct {
+	DisplayBrowser bool
+}
+
+type parser struct {
+	cfg ParserConfiguration
+}
 
 func (p *parser) FindDownloadLink(siteUrl string) (string, error) {
 	urlObj := p.findTaboolaTraceUrl(siteUrl)
@@ -41,20 +50,42 @@ func (p *parser) FindDownloadLink(siteUrl string) (string, error) {
 }
 
 func (p *parser) findTaboolaTraceUrl(siteUrl string) string {
+	var browser *rod.Browser
+	if p.cfg.DisplayBrowser {
+		l := launcher.New().
+			NoSandbox(true).
+			Headless(false).
+			Devtools(true)
+		defer l.Cleanup()
+		curl := l.MustLaunch()
+		browser = rod.New().
+			ControlURL(curl).
+			Trace(true)
+	} else {
+		browser = rod.New()
+	}
+
 	resp := make(chan string, 1)
-	browser := rod.New().MustConnect()
+	log.Debug("starting headless browser")
+	browser.MustConnect()
+
+	if p.cfg.DisplayBrowser {
+		launcher.Open(browser.ServeMonitor(""))
+	}
+
 	defer browser.MustClose()
 
 	router := browser.HijackRequests()
 	defer router.MustStop()
 
 	router.MustAdd("https://trc.taboola.com*playlist.m3u8*", func(ctx *rod.Hijack) {
+		log.Debug("found taboola request")
 		url := ctx.Request.URL().Query().Get("data")
-		_ = ctx.LoadResponse(http.DefaultClient, true)
 		resp <- url
 	})
 
 	go router.Run()
+	log.Debug("navigating to page...")
 	browser.MustPage(siteUrl)
 
 	return <-resp
