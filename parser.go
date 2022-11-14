@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/go-rod/rod"
+	log "github.com/sirupsen/logrus"
 )
 
 type Parser interface {
@@ -22,18 +23,8 @@ type parser struct{}
 
 func (p *parser) FindDownloadLink(siteUrl string) (string, error) {
 	urlObj := p.findTaboolaTraceUrl(siteUrl)
-	var taboolaUrlContainer taboolaReq
-	if err := json.Unmarshal([]byte(urlObj), &taboolaUrlContainer); err != nil {
-		panic(err)
-	}
-
-	taboolaUrl, err := url.Parse(taboolaUrlContainer.Url)
-	if err != nil {
-		panic(err)
-	}
-
-	vidUrl := taboolaUrl.Query().Get("videoUrl")
-
+	log.Debug("found taboola trace url", urlObj)
+	vidUrl := p.extractVideoInfoLink(urlObj)
 	httpResp, err := http.Get(vidUrl)
 	if err != nil {
 		panic(err)
@@ -85,4 +76,18 @@ func (p *parser) findTaboolaTraceUrl(siteUrl string) string {
 	browser.MustPage(siteUrl)
 
 	return <-resp
+}
+
+func (p *parser) extractVideoInfoLink(urlObj string) string {
+	var taboolaUrlContainer taboolaReq
+	if err := json.Unmarshal([]byte(urlObj), &taboolaUrlContainer); err != nil {
+		panic(err)
+	}
+
+	taboolaUrl, err := url.Parse(taboolaUrlContainer.Url)
+	if err != nil {
+		panic(err)
+	}
+
+	return taboolaUrl.Query().Get("videoUrl")
 }

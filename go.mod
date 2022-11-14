@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/canhlinh/hlsdl v0.0.0-20210810121645-29f1ce6d3208
 	github.com/go-rod/rod v0.112.0
+	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
 )
 
@@ -30,7 +31,7 @@ require (
 	github.com/ysmood/gson v0.7.1 // indirect
 	github.com/ysmood/leakless v0.8.0 // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
-	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.24.0 // indirect
