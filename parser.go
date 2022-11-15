@@ -23,6 +23,10 @@ type Parser interface {
 }
 
 func NewParser(cfg ParserConfiguration) Parser {
+	if cfg.Quality == "" {
+		cfg.Quality = QualityMedium
+	}
+
 	return &parser{
 		cfg: cfg,
 	}
@@ -30,6 +34,7 @@ func NewParser(cfg ParserConfiguration) Parser {
 
 type ParserConfiguration struct {
 	DisplayBrowser bool
+	CustomBrowser  string
 	Quality        Quality
 }
 
@@ -68,6 +73,10 @@ func (p *parser) findTaboolaTraceUrl(siteUrl string) string {
 		browser = rod.New().
 			ControlURL(curl).
 			Trace(true)
+	} else if p.cfg.CustomBrowser != "" {
+		l := launcher.New().Bin("chromium-browser")
+		defer l.Cleanup()
+		browser = rod.New().ControlURL(l.MustLaunch())
 	} else {
 		browser = rod.New()
 	}

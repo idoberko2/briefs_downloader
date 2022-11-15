@@ -18,6 +18,7 @@ func main() {
 		SetDescription("This command scrapes and downloads a stream").
 		SetShortDescription("download a stream").
 		AddArgument("url", "url of the webpage", "").
+		AddFlag("custom-browser", "use a custom broser for scraping", commando.String, nil).
 		AddFlag("verbose", "display logs while serving the project", commando.Bool, nil).
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
 			verbose, err := flags["verbose"].GetBool()
@@ -29,8 +30,14 @@ func main() {
 				log.SetLevel(log.DebugLevel)
 			}
 
-			// "https://playbyplay.sport5.co.il/?GameID=125423&FLNum=16"
-			s := DefaultScraper()
+			s := NewScraper(
+				NewParser(ParserConfiguration{
+					DisplayBrowser: false,
+					CustomBrowser:  args["custom-browser"].Value,
+					Quality:        QualityHigh,
+				}),
+				NewDownloader(),
+			)
 			url := args["url"].Value
 			filePath, err := s.FindAndDownload(url)
 			if err != nil {
