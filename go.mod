@@ -1,4 +1,4 @@
-module github.com/idoberko2/snippet_downloader
+module github.com/idoberko2/briefs_downloader
 
 go 1.17
 
