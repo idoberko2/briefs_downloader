@@ -1,6 +1,9 @@
 package main
 
 import (
+	"errors"
+	"os"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -8,25 +11,38 @@ type TelegramHandler interface {
 	ListenAndServe() error
 }
 
-func NewTelegramHandler(scraper Scraper, token string) TelegramHandler {
+type TelegramConfig struct {
+	Token   string
+	IsDebug bool
+}
+
+var ErrEmptyToken = errors.New("empty token")
+
+func NewTelegramHandler(scraper Scraper, cfg TelegramConfig) TelegramHandler {
 	return &telegramHandler{
 		scraper: scraper,
-		token:   token,
+		cfg:     cfg,
 	}
 }
 
 type telegramHandler struct {
 	scraper Scraper
-	token   string
+	cfg     TelegramConfig
 }
 
 func (t *telegramHandler) ListenAndServe() error {
-	bot, err := tgbotapi.NewBotAPI(t.token)
+	if t.cfg.Token == "" {
+		return ErrEmptyToken
+	}
+
+	bot, err := tgbotapi.NewBotAPI(t.cfg.Token)
 	if err != nil {
 		return err
 	}
 
-	bot.Debug = true
+	if t.cfg.IsDebug {
+		bot.Debug = true
+	}
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -53,6 +69,7 @@ func (t *telegramHandler) ListenAndServe() error {
 			videoMsg.ReplyToMessageID = update.Message.MessageID
 
 			bot.Send(videoMsg)
+			os.RemoveAll(filePath)
 		}
 	}
 

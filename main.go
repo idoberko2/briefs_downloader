@@ -59,8 +59,8 @@ func main() {
 				log.WithError(err).Fatal("error parsing flag")
 			}
 			if verbose {
-				fmt.Println("verbose")
 				log.SetLevel(log.DebugLevel)
+				log.Debug("set DEBUG verbosity")
 			}
 
 			s := NewScraper(
@@ -69,7 +69,10 @@ func main() {
 				}),
 				NewDownloader())
 			token := args["token"].Value
-			th := NewTelegramHandler(s, token)
+			th := NewTelegramHandler(s, TelegramConfig{
+				Token:   token,
+				IsDebug: verbose,
+			})
 			if err := th.ListenAndServe(); err != nil {
 				log.WithError(err).Fatal("error listening")
 			}
