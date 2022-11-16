@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/thatisuday/commando"
 )
+
+const flagNoCustomBrowser = "NO_CUSTOM_BROWSER"
 
 func main() {
 	commando.
@@ -18,8 +25,8 @@ func main() {
 		SetDescription("This command scrapes and downloads a stream").
 		SetShortDescription("download a stream").
 		AddArgument("url", "url of the webpage", "").
-		AddFlag("custom-browser", "use a custom browser for scraping", commando.String, nil).
-		AddFlag("verbose", "display logs while serving the project", commando.Bool, nil).
+		AddFlag("verbose", "display logs while serving the project", commando.Bool, false).
+		AddFlag("custom-browser", "use a custom browser for scraping", commando.String, flagNoCustomBrowser).
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
 			verbose, err := flags["verbose"].GetBool()
 			if err != nil {
@@ -30,10 +37,18 @@ func main() {
 				log.SetLevel(log.DebugLevel)
 			}
 
+			var customBrowser string
+			if b, err := flags["custom-browser"].GetString(); err != nil {
+				log.WithError(err).Fatal("error parsing flag")
+			} else if b != flagNoCustomBrowser {
+				customBrowser = b
+				log.Debug("using custom browser, browser=", b)
+			}
+
 			s := NewScraper(
 				NewParser(ParserConfiguration{
 					DisplayBrowser: false,
-					CustomBrowser:  args["custom-browser"].Value,
+					CustomBrowser:  customBrowser,
 					Quality:        QualityHigh,
 				}),
 				NewDownloader(),
@@ -52,8 +67,8 @@ func main() {
 		SetDescription("This command listens via telegram and downloads a stream on demand").
 		SetShortDescription("telegram listener").
 		AddArgument("token", "telegram access token", "").
-		AddFlag("custom-browser", "use a custom browser for scraping", commando.String, nil).
-		AddFlag("verbose", "display logs while serving the project", commando.Bool, nil).
+		AddFlag("verbose", "display logs while serving the project", commando.Bool, false).
+		AddFlag("custom-browser", "use a custom browser for scraping", commando.String, flagNoCustomBrowser).
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
 			verbose, err := flags["verbose"].GetBool()
 			if err != nil {
@@ -64,13 +79,11 @@ func main() {
 				log.Debug("set DEBUG verbosity")
 			}
 			var customBrowser string
-			if cb, ok := flags["custom-browser"]; ok {
-				if b, err := cb.GetString(); err != nil {
-					log.WithError(err).Fatal("error parsing flag")
-				} else {
-					customBrowser = b
-					log.Debug("using custom browser, browser=", b)
-				}
+			if b, err := flags["custom-browser"].GetString(); err != nil {
+				log.WithError(err).Fatal("error parsing flag")
+			} else if b != flagNoCustomBrowser {
+				customBrowser = b
+				log.Debug("using custom browser, browser=", b)
 			}
 
 			s := NewScraper(
@@ -85,10 +98,39 @@ func main() {
 				Token:   token,
 				IsDebug: verbose,
 			})
-			if err := th.ListenAndServe(); err != nil {
+
+			ctx, cancel := context.WithCancel(context.Background())
+			go cancelOnSignal(cancel)
+			done := make(chan bool, 1)
+			go wait(ctx, done, 20*time.Second)
+			if err := th.ListenAndServe(ctx, done); err != nil {
 				log.WithError(err).Fatal("error listening")
 			}
+			log.Debug("telegram handler is done")
 		})
 
 	commando.Parse(nil)
+}
+
+func cancelOnSignal(cancel func()) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	sig := <-sigs
+	log.Debug("received signal, terminating... signal=", sig)
+	cancel()
+}
+
+func wait(ctx context.Context, done <-chan bool, timeout time.Duration) {
+	<-ctx.Done()
+	select {
+	case <-done:
+		{
+			log.Debug("terminated gracefully")
+		}
+	case <-time.After(timeout):
+		{
+			log.Fatal("could not terminate gracefully during timeout, timeout=", timeout)
+		}
+	}
 }
