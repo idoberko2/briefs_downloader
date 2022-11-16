@@ -64,6 +64,7 @@ func (p *parser) FindDownloadLink(siteUrl string) (string, error) {
 func (p *parser) findTaboolaTraceUrl(siteUrl string) string {
 	var browser *rod.Browser
 	if p.cfg.DisplayBrowser {
+		log.Debug("starting non-headless browser")
 		l := launcher.New().
 			NoSandbox(true).
 			Headless(false).
@@ -74,15 +75,16 @@ func (p *parser) findTaboolaTraceUrl(siteUrl string) string {
 			ControlURL(curl).
 			Trace(true)
 	} else if p.cfg.CustomBrowser != "" {
-		l := launcher.New().Bin("chromium-browser")
+		log.Debug("starting custom browser, browser=", p.cfg.CustomBrowser)
+		l := launcher.New().Bin(p.cfg.CustomBrowser)
 		defer l.Cleanup()
 		browser = rod.New().ControlURL(l.MustLaunch())
 	} else {
+		log.Debug("starting default headless browser")
 		browser = rod.New()
 	}
 
 	resp := make(chan string, 1)
-	log.Debug("starting headless browser")
 	browser.MustConnect()
 
 	if p.cfg.DisplayBrowser {

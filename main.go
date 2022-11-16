@@ -18,7 +18,7 @@ func main() {
 		SetDescription("This command scrapes and downloads a stream").
 		SetShortDescription("download a stream").
 		AddArgument("url", "url of the webpage", "").
-		AddFlag("custom-browser", "use a custom broser for scraping", commando.String, nil).
+		AddFlag("custom-browser", "use a custom browser for scraping", commando.String, nil).
 		AddFlag("verbose", "display logs while serving the project", commando.Bool, nil).
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
 			verbose, err := flags["verbose"].GetBool()
@@ -52,6 +52,7 @@ func main() {
 		SetDescription("This command listens via telegram and downloads a stream on demand").
 		SetShortDescription("telegram listener").
 		AddArgument("token", "telegram access token", "").
+		AddFlag("custom-browser", "use a custom browser for scraping", commando.String, nil).
 		AddFlag("verbose", "display logs while serving the project", commando.Bool, nil).
 		SetAction(func(args map[string]commando.ArgValue, flags map[string]commando.FlagValue) {
 			verbose, err := flags["verbose"].GetBool()
@@ -62,10 +63,21 @@ func main() {
 				log.SetLevel(log.DebugLevel)
 				log.Debug("set DEBUG verbosity")
 			}
+			var customBrowser string
+			if cb, ok := flags["custom-browser"]; ok {
+				if b, err := cb.GetString(); err != nil {
+					log.WithError(err).Fatal("error parsing flag")
+				} else {
+					customBrowser = b
+					log.Debug("using custom browser, browser=", b)
+				}
+			}
 
 			s := NewScraper(
 				NewParser(ParserConfiguration{
-					Quality: QualityMedium,
+					Quality:        QualityMedium,
+					DisplayBrowser: false,
+					CustomBrowser:  customBrowser,
 				}),
 				NewDownloader())
 			token := args["token"].Value
