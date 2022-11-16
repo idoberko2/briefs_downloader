@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"os"
+	"path/filepath"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	log "github.com/sirupsen/logrus"
 )
 
 type TelegramHandler interface {
@@ -69,7 +71,13 @@ func (t *telegramHandler) ListenAndServe() error {
 			videoMsg.ReplyToMessageID = update.Message.MessageID
 
 			bot.Send(videoMsg)
-			os.RemoveAll(filePath)
+
+			log.Debug("removing file...", filePath)
+			if err := os.RemoveAll(filepath.Dir(filePath)); err != nil {
+				log.WithError(err).Error("error removing file")
+			} else {
+				log.Debug("removed file completed successfully", filePath)
+			}
 		}
 	}
 
